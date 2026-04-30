@@ -28,17 +28,6 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-# Application definition
-
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-]
-
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",   
     'django.middleware.security.SecurityMiddleware',
@@ -130,8 +119,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "users",  # nosso app
+    "agenda",  # sua app agenda
+    "users",  # outra app
     "corsheaders",  # para permitir acesso do frontend
 ]
 
+
 CORS_ALLOW_ALL_ORIGINS = True
+
+STATIC_URL = '/static/'

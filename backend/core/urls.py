@@ -20,3 +20,24 @@ from django.urls import path
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]
+
+from django.contrib import admin
+from django.urls import path
+from agenda import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('compromissos/', views.listar_compromissos),
+]
+
+from django.contrib import admin
+from django.urls import path
+from agenda import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', views.home, name='home'),
+    path('funcionalidades/', views.funcionalidades, name='funcionalidades'),
+    path('sobre/', views.sobre, name='sobre'),
+    path('contato/', views.contato, name='contato'),
+]
