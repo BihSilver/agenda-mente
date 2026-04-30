@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  /* Isso cria a classe bg-background */
-  --color-background: #ffffff; 
-  
-  /* Adicione outras cores se o erro persistir em outras classes */
+  --color-background: #ffffff;
   --color-foreground: #171717;
+}
+
+body {
+  @apply bg-background text-foreground;
 }
