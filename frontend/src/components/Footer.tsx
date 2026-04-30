@@ -16,6 +16,6 @@ export function Footer() {
         </div>
       </div>
 <div>
-  <p className="text-center">© 2026 AgendaMente. Todos os direitos</p>
+  <p className="text-center">© 2026 AgendaMente. Todos os direitos reservados</p>
 </div>
 </footer>)}

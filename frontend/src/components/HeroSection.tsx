@@ -22,7 +22,7 @@ export function HeroSection() {
         <div className="flex justify-center relative">
           <div className="w-80 h-80 bg-gradient-to-br from-secondary to-primary/40 rounded-full flex items-center justify-center shadow-2xl">
             <div className="text-9xl animate-bounce">🐸</div>
-            <div className="absolute -top-4 -right-4 bg-yellow-300 px-4 py-2 rounded-full shadow-lg">
+            <div className="absolute -top-4 -right-2 bg-yellow-300 px-4 py-2 rounded-full shadow-lg">
               Vamos lá!
             </div>
           </div>

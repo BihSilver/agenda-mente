@@ -10,7 +10,6 @@ export function Header() {
         </div>
         <nav className="hidden md:flex items-center gap-8">
           <a href="#funcionalidades" className="hover:text-primary">Funcionalidades</a>
-          <a href="#motivacional" className="hover:text-primary">Motivacional</a>
           <a href="#sobre" className="hover:text-primary">Sobre</a>
           <a href="#contato" className="hover:text-primary">Contato</a>
         </nav>
