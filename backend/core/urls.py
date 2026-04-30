@@ -21,18 +21,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 ]
 
-from django.contrib import admin
-from django.urls import path
 from agenda import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('compromissos/', views.listar_compromissos),
 ]
-
-from django.contrib import admin
-from django.urls import path
-from agenda import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),

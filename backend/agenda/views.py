@@ -9,8 +9,6 @@ def listar_compromissos(request):
     texto = ", ".join([c.titulo for c in compromissos])
     return HttpResponse(f"Compromissos: {texto}")
 
-from django.shortcuts import render
-
 def home(request):
     return render(request, 'home.html')
 
