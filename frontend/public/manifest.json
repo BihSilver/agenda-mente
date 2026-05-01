@@ -1,0 +1,9 @@
+{
+  "name": "AgendaMente Mobile",
+  "short_name": "AgendaMente",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "description": "Agenda escolar e dashboard de produtividade"
+}
