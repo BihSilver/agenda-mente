@@ -20,9 +20,6 @@ export default function HeroSection({ onStart }: HeroSectionProps) {
           >
             Comece Agora
           </button>
-          <button className="border border-gray-300 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-            Saiba Mais
-          </button>
         </div>
       </div>
 
