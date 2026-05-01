@@ -6,7 +6,9 @@ import { MascotSection } from "../components/MascotSection";
 import { Footer } from "../components/Footer";
 
 type Todo = { id: number; title: string; details: string; time: string; date: string; done: boolean; type: "atividade" | "aula" };
-type UserAccount = { name: string; email: string; password: string };
+type UserAccount = { name: string; email: string; password: string; phone: string };
+
+type AuthMode = "login" | "signup" | "recover";
 
 const now = new Date();
 const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -20,12 +22,15 @@ const initialTodos: Todo[] = [
 
 export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
-  const [isSignup, setIsSignup] = useState(false);
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [isLogged, setIsLogged] = useState(false);
   const [name, setName] = useState("Estudante");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [todos, setTodos] = useState<Todo[]>(() => {
     if (typeof window === "undefined") return initialTodos;
     const raw = localStorage.getItem(STORAGE_TODOS);
@@ -50,24 +55,65 @@ export default function Home() {
   const weeklyStudyHours = [4, 3.5, 5, 4.5, 5.5, 3, 2];
   const weekDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
+  function resetAuthMessages() {
+    setError("");
+    setSuccess("");
+  }
+
+  function validateSignupFields(users: UserAccount[]) {
+    if (!name.trim() || !email.trim() || !password.trim() || !phone.trim()) {
+      setError("Para cadastrar, informe nome, e-mail, telefone e senha.");
+      return false;
+    }
+
+    if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
+      setError("Já existe uma conta com este e-mail.");
+      return false;
+    }
+
+    if (phone.replace(/\D/g, "").length < 10) {
+      setError("Informe um telefone válido com DDD.");
+      return false;
+    }
+
+    return true;
+  }
+
   function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    resetAuthMessages();
+
     const users = JSON.parse(localStorage.getItem(STORAGE_USERS) || "[]") as UserAccount[];
 
-    if (isSignup) {
-      if (users.some((u) => u.email === email)) return setError("Já existe uma conta com este e-mail.");
-      users.push({ name, email, password });
+    if (authMode === "signup") {
+      if (!validateSignupFields(users)) return;
+
+      users.push({ name: name.trim(), email: email.trim().toLowerCase(), password, phone: phone.trim() });
       localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
-      setError("");
-      setIsLogged(true);
-      setShowAuth(false);
+      setSuccess("Cadastro realizado com sucesso. Agora você já pode entrar.");
+      setAuthMode("login");
       return;
     }
 
-    const user = users.find((u) => u.email === email && u.password === password);
-    if (!user) return setError("E-mail ou senha inválidos.");
+    if (authMode === "recover") {
+      const userIndex = users.findIndex((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+      if (userIndex === -1) return setError("Não encontramos esse e-mail para recuperação.");
+      if (!newPassword.trim()) return setError("Informe uma nova senha para recuperar o acesso.");
+
+      users[userIndex] = { ...users[userIndex], password: newPassword };
+      localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
+      setSuccess("Senha atualizada. Faça login com a nova senha.");
+      setAuthMode("login");
+      setPassword("");
+      setNewPassword("");
+      return;
+    }
+
+    const user = users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password);
+    if (!user) return setError("E-mail ou senha inválidos. Use 'Recuperar senha' para redefinir.");
+
     setName(user.name);
-    setError("");
+    setPhone(user.phone);
     setIsLogged(true);
     setShowAuth(false);
   }
@@ -219,23 +265,50 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onStart={() => { setShowAuth(true); setError(""); }} />
-      <main><HeroSection onStart={() => { setShowAuth(true); setError(""); }} /><FeaturesSection /><MascotSection /></main>
+      <Header onStart={() => { setShowAuth(true); resetAuthMessages(); }} />
+      <main><HeroSection onStart={() => { setShowAuth(true); resetAuthMessages(); }} /><FeaturesSection /><MascotSection /></main>
       <Footer />
       {showAuth && (
         <div className="fixed inset-0 bg-black/30 grid place-items-center p-4 sm:p-6">
           <div className="w-full max-w-xl rounded-3xl bg-white p-6 sm:p-8 shadow-2xl">
             <div className="w-16 h-16 mx-auto rounded-full bg-green-300 grid place-items-center text-4xl frog-jump">🐸</div>
-            <h2 className="text-3xl font-bold mt-5">{isSignup ? "Crie sua conta" : "Bem-vindo de volta"}</h2>
-            <p className="text-slate-500 mt-2">{isSignup ? "Seu login será salvo para próximos acessos." : "Entre para continuar organizando sua vida."}</p>
+            <h2 className="text-3xl font-bold mt-5">
+              {authMode === "signup" ? "Crie sua conta" : authMode === "recover" ? "Recuperar senha" : "Bem-vindo de volta"}
+            </h2>
+            <p className="text-slate-500 mt-2">
+              {authMode === "signup" && "Cadastre com nome, e-mail, telefone e senha."}
+              {authMode === "login" && "Entre para continuar organizando sua vida."}
+              {authMode === "recover" && "Informe seu e-mail e defina uma nova senha."}
+            </p>
+
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => { setAuthMode("login"); resetAuthMessages(); }} className={`px-3 py-2 rounded-lg ${authMode === "login" ? "bg-blue-600 text-white" : "bg-slate-100"}`}>Login</button>
+              <button onClick={() => { setAuthMode("signup"); resetAuthMessages(); }} className={`px-3 py-2 rounded-lg ${authMode === "signup" ? "bg-blue-600 text-white" : "bg-slate-100"}`}>Cadastro</button>
+              <button onClick={() => { setAuthMode("recover"); resetAuthMessages(); }} className={`px-3 py-2 rounded-lg ${authMode === "recover" ? "bg-blue-600 text-white" : "bg-slate-100"}`}>Recuperar senha</button>
+            </div>
+
             <form onSubmit={handleAuthSubmit} className="mt-6 space-y-4">
-              <input className="w-full border rounded-xl px-4 py-3" placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} required />
+              {authMode === "signup" && (
+                <>
+                  <input className="w-full border rounded-xl px-4 py-3" placeholder="Seu nome completo" value={name} onChange={(e) => setName(e.target.value)} required />
+                  <input className="w-full border rounded-xl px-4 py-3" placeholder="(11) 99999-9999" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                </>
+              )}
               <input className="w-full border rounded-xl px-4 py-3" placeholder="seu@email.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              <input className="w-full border rounded-xl px-4 py-3" placeholder="********" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              {authMode !== "recover" && (
+                <input className="w-full border rounded-xl px-4 py-3" placeholder="********" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              )}
+              {authMode === "recover" && (
+                <input className="w-full border rounded-xl px-4 py-3" placeholder="Nova senha" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+              )}
+
               {error && <p className="text-sm text-red-600">{error}</p>}
-              <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl py-3 font-bold">{isSignup ? "Criar conta" : "Entrar"}</button>
+              {success && <p className="text-sm text-green-700">{success}</p>}
+
+              <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl py-3 font-bold">
+                {authMode === "signup" ? "Criar conta" : authMode === "recover" ? "Atualizar senha" : "Entrar"}
+              </button>
             </form>
-            <button onClick={() => setIsSignup((v) => !v)} className="mt-4 text-blue-600 font-medium">{isSignup ? "Já tenho login" : "Criar meu login"}</button>
           </div>
         </div>
       )}

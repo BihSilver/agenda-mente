@@ -54,12 +54,49 @@ def login(request):
         return JsonResponse({"erro": "Método não permitido"}, status=405)
 
     data = _json_body(request)
-    username = data.get("username", "")
+    username = data.get("username", "").strip()
     password = data.get("password", "")
+    recuperar_senha = data.get("recuperar_senha", False)
+    email_recuperacao = data.get("email", "").strip().lower()
+
     user = authenticate(username=username, password=password)
 
     if not user:
-        return JsonResponse({"erro": "Credenciais inválidas."}, status=401)
+        if recuperar_senha:
+            if not email_recuperacao:
+                usuario = User.objects.filter(username=username).first()
+                email_recuperacao = usuario.email if usuario else ""
+
+            if not email_recuperacao:
+                return JsonResponse(
+                    {"erro": "Credenciais inválidas e e-mail para recuperação não informado."},
+                    status=401,
+                )
+
+            usuario_recuperacao = User.objects.filter(email=email_recuperacao).first()
+            if not usuario_recuperacao:
+                return JsonResponse({"erro": "E-mail de recuperação não encontrado."}, status=404)
+
+            token = secrets.token_hex(24)
+            RecuperacaoSenhaToken.objects.create(user=usuario_recuperacao, token=token)
+            return JsonResponse(
+                {
+                    "erro": "Credenciais inválidas.",
+                    "recuperacao_senha": True,
+                    "mensagem": "Token de recuperação gerado durante a tentativa de login.",
+                    "token": token,
+                },
+                status=401,
+            )
+
+        return JsonResponse(
+            {
+                "erro": "Credenciais inválidas.",
+                "recuperacao_disponivel": True,
+                "mensagem": "Envie recuperar_senha=true na tentativa de login para gerar token de recuperação.",
+            },
+            status=401,
+        )
 
     return JsonResponse({"mensagem": "Login realizado com sucesso.", "user_id": user.id})
 
