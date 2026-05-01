@@ -1,13 +1,34 @@
 import json
 import secrets
+from datetime import timedelta
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import PerfilUsuario, RecuperacaoSenhaToken
+
+
+TOKEN_EXPIRATION_MINUTES = 15
+
+
+def _enviar_email_recuperacao(email, token):
+    send_mail(
+        subject="Recuperação de senha - AgendaMente",
+        message=(
+            "Recebemos uma solicitação para redefinir sua senha.\n\n"
+            f"Token de recuperação: {token}\n"
+            f"Este token expira em {TOKEN_EXPIRATION_MINUTES} minutos.\n"
+            "Se você não solicitou, ignore este e-mail."
+        ),
+        from_email=None,
+        recipient_list=[email],
+        fail_silently=False,
+    )
 
 
 def _json_body(request):
@@ -56,47 +77,10 @@ def login(request):
     data = _json_body(request)
     username = data.get("username", "").strip()
     password = data.get("password", "")
-    recuperar_senha = data.get("recuperar_senha", False)
-    email_recuperacao = data.get("email", "").strip().lower()
-
     user = authenticate(username=username, password=password)
 
     if not user:
-        if recuperar_senha:
-            if not email_recuperacao:
-                usuario = User.objects.filter(username=username).first()
-                email_recuperacao = usuario.email if usuario else ""
-
-            if not email_recuperacao:
-                return JsonResponse(
-                    {"erro": "Credenciais inválidas e e-mail para recuperação não informado."},
-                    status=401,
-                )
-
-            usuario_recuperacao = User.objects.filter(email=email_recuperacao).first()
-            if not usuario_recuperacao:
-                return JsonResponse({"erro": "E-mail de recuperação não encontrado."}, status=404)
-
-            token = secrets.token_hex(24)
-            RecuperacaoSenhaToken.objects.create(user=usuario_recuperacao, token=token)
-            return JsonResponse(
-                {
-                    "erro": "Credenciais inválidas.",
-                    "recuperacao_senha": True,
-                    "mensagem": "Token de recuperação gerado durante a tentativa de login.",
-                    "token": token,
-                },
-                status=401,
-            )
-
-        return JsonResponse(
-            {
-                "erro": "Credenciais inválidas.",
-                "recuperacao_disponivel": True,
-                "mensagem": "Envie recuperar_senha=true na tentativa de login para gerar token de recuperação.",
-            },
-            status=401,
-        )
+        return JsonResponse({"erro": "Credenciais inválidas."}, status=401)
 
     return JsonResponse({"mensagem": "Login realizado com sucesso.", "user_id": user.id})
 
@@ -109,17 +93,11 @@ def solicitar_recuperacao_senha(request):
     data = _json_body(request)
     email = data.get("email", "").strip().lower()
     user = User.objects.filter(email=email).first()
-    if not user:
-        return JsonResponse({"erro": "E-mail não encontrado."}, status=404)
-
-    token = secrets.token_hex(24)
-    RecuperacaoSenhaToken.objects.create(user=user, token=token)
-    return JsonResponse(
-        {
-            "mensagem": "Token de recuperação gerado.",
-            "token": token,
-        }
-    )
+    if user:
+        token = secrets.token_hex(24)
+        RecuperacaoSenhaToken.objects.create(user=user, token=token)
+        _enviar_email_recuperacao(email, token)
+    return JsonResponse({"mensagem": "Se o e-mail existir, enviaremos as instruções de recuperação."})
 
 
 @csrf_exempt
@@ -131,7 +109,8 @@ def redefinir_senha(request):
     token = data.get("token", "")
     nova_senha = data.get("nova_senha", "")
 
-    token_obj = RecuperacaoSenhaToken.objects.filter(token=token, usado=False).first()
+    limite = timezone.now() - timedelta(minutes=TOKEN_EXPIRATION_MINUTES)
+    token_obj = RecuperacaoSenhaToken.objects.filter(token=token, usado=False, criado_em__gte=limite).first()
     if not token_obj:
         return JsonResponse({"erro": "Token inválido ou já utilizado."}, status=400)
 
