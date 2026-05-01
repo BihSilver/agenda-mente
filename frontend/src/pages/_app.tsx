@@ -5,12 +5,26 @@ import "../styles/globals.css";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
+    if (!("serviceWorker" in navigator)) {
+      return;
+    }
+
+    if (process.env.NODE_ENV === "production") {
       navigator.serviceWorker
         .register("/service-worker.js")
         .then(() => console.log("Service Worker registrado"))
         .catch((err) => console.log("Erro:", err));
+      return;
     }
+
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister();
+        });
+      })
+      .catch((err) => console.log("Erro ao remover SW em desenvolvimento:", err));
   }, []);
 
   return (
@@ -25,4 +39,3 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     </>
   );
 }
-
