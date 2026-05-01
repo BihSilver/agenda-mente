@@ -4,7 +4,7 @@ export function Footer() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-10">
           <div>
-            <div className="flex items-center gap-3 text-4xl font-bold"><span>🐸</span>AgendaMente</div>
+            <div className="flex items-center gap-3 text-2xl font-bold"><span>🐸</span>AgendaMente</div>
             <p className="mt-5 text-[#afbbce] text-2xl leading-relaxed">Organize sua vida acadêmica e pessoal em um só lugar.</p>
           </div>
           <div>

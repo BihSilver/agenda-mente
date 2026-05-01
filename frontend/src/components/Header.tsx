@@ -1,4 +1,5 @@
 import Link from "next/link";
+import InstallButton from "./InstallButton";
 
 type HeaderProps = {
   onStart: () => void;
@@ -14,21 +15,21 @@ export function Header({ onStart }: HeaderProps) {
           </div>
           <span className="text-xl font-semibold text-primary">AgendaMente</span>
         </div>
+      <nav className="flex items-center gap-6">
+      <a href="#funcionalidades" className="text-gray-700 hover:text-blue-600">Funcionalidades</a>
+     <a href="#motivacional" className="text-gray-700 hover:text-blue-600">Sobre</a>
 
-        <nav className="flex items-center gap-6">
-          <a href="#funcionalidades" className="text-gray-700 hover:text-blue-600">Funcionalidades</a>
-          <a href="#motivacional" className="text-gray-700 hover:text-blue-600">Sobre</a>
-          <Link href="#footer" scroll={true}>
-            <span className="text-gray-700 hover:text-blue-600 cursor-pointer">Contato</span>
-          </Link>
-          <button
-            onClick={onStart}
-            className="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
-          >
-            Comece Agora
-          </button>
-        </nav>
+     <InstallButton />
+
+     <button
+    onClick={onStart}
+    className="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+   >
+    Comece Agora
+   </button>
+ </nav>
       </div>
     </header>
   );
 }
+

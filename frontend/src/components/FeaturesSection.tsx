@@ -33,7 +33,7 @@ export function FeaturesSection() {
           {cards.map((card) => (
             <article key={card.title} className="bg-[#f5f5f8] border border-[#d8d9dd] rounded-3xl p-6 min-h-72">
               <div className="w-16 h-16 rounded-2xl bg-blue-500/85 grid place-items-center text-3xl">{card.icon}</div>
-              <h3 className="mt-6 text-4xl font-semibold text-[#161616]">{card.title}</h3>
+              <h3 className="mt-6 text-2xl font-semibold text-[#161616]">{card.title}</h3>
               <p className="mt-4 text-[#5d6470] text-2xl leading-relaxed">{card.description}</p>
             </article>
           ))}
