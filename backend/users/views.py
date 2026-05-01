@@ -1,4 +1,5 @@
 import json
+import os
 import secrets
 from datetime import timedelta
 
@@ -14,14 +15,17 @@ from .models import PerfilUsuario, RecuperacaoSenhaToken
 
 
 TOKEN_EXPIRATION_MINUTES = 15
+PASSWORD_RESET_FRONTEND_URL = os.getenv("PASSWORD_RESET_FRONTEND_URL", "http://localhost:3000")
 
 
 def _enviar_email_recuperacao(email, token):
+    link_recuperacao = f"{PASSWORD_RESET_FRONTEND_URL}/?mode=recover&token={token}"
     send_mail(
         subject="Recuperação de senha - AgendaMente",
         message=(
             "Recebemos uma solicitação para redefinir sua senha.\n\n"
-            f"Token de recuperação: {token}\n"
+            "Acesse o link abaixo para criar uma nova senha:\n"
+            f"{link_recuperacao}\n\n"
             f"Este token expira em {TOKEN_EXPIRATION_MINUTES} minutos.\n"
             "Se você não solicitou, ignore este e-mail."
         ),

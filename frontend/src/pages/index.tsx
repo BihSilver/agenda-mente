@@ -15,20 +15,33 @@ const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0"
 const STORAGE_TODOS = "agendamente_todos";
 const STORAGE_USERS = "agendamente_users";
 
+function getRecoveryParams() {
+  if (typeof window === "undefined") return { showAuth: false, authMode: "login" as AuthMode, resetToken: "" };
+  const params = new URLSearchParams(window.location.search);
+  const isRecover = params.get("mode") === "recover";
+  return {
+    showAuth: isRecover,
+    authMode: (isRecover ? "recover" : "login") as AuthMode,
+    resetToken: params.get("token") || "",
+  };
+}
+
 const initialTodos: Todo[] = [
   { id: 1, title: "Aula de Física", details: "Revisar exercícios", time: "08:00", date: today, done: false, type: "aula" },
   { id: 2, title: "Lista de Matemática", details: "Capítulos 1 e 2", time: "14:00", date: today, done: true, type: "atividade" },
 ];
 
 export default function Home() {
-  const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const recoveryParams = getRecoveryParams();
+  const [showAuth, setShowAuth] = useState(recoveryParams.showAuth);
+  const [authMode, setAuthMode] = useState<AuthMode>(recoveryParams.authMode);
   const [isLogged, setIsLogged] = useState(false);
   const [name, setName] = useState("Estudante");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [resetToken, setResetToken] = useState(recoveryParams.resetToken);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [todos, setTodos] = useState<Todo[]>(() => {
@@ -88,7 +101,7 @@ export default function Home() {
     return true;
   }
 
-  function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     resetAuthMessages();
 
@@ -105,16 +118,46 @@ export default function Home() {
     }
 
     if (authMode === "recover") {
-      const userIndex = users.findIndex((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-      if (userIndex === -1) return setError("Não encontramos esse e-mail para recuperação.");
+      if (!email.trim()) return setError("Informe o e-mail da conta.");
+
+      if (!resetToken) {
+        try {
+          const response = await fetch("http://localhost:8000/usuarios/recuperar-senha/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email.trim().toLowerCase() }),
+          });
+          if (!response.ok) throw new Error();
+          setSuccess("Solicitação enviada. Confira seu e-mail para acessar o link de redefinição.");
+        } catch {
+          setError("Não foi possível enviar o e-mail de recuperação agora. Tente novamente.");
+        }
+        return;
+      }
+
       if (!newPassword.trim()) return setError("Informe uma nova senha para recuperar o acesso.");
 
-      users[userIndex] = { ...users[userIndex], password: newPassword };
-      localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
-      setSuccess("Senha atualizada. Faça login com a nova senha.");
-      setAuthMode("login");
-      setPassword("");
-      setNewPassword("");
+      try {
+        const response = await fetch("http://localhost:8000/usuarios/redefinir-senha/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: resetToken, nova_senha: newPassword }),
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          setError(payload.erro || "Não foi possível redefinir a senha.");
+          return;
+        }
+
+        setSuccess("Senha atualizada. Faça login com a nova senha.");
+        setAuthMode("login");
+        setResetToken("");
+        setPassword("");
+        setNewPassword("");
+        window.history.replaceState({}, "", "/");
+      } catch {
+        setError("Erro de conexão ao redefinir senha.");
+      }
       return;
     }
 
@@ -301,7 +344,7 @@ export default function Home() {
             <p className="text-slate-500 mt-2">
               {authMode === "signup" && "Cadastre com nome, e-mail, telefone e senha."}
               {authMode === "login" && "Entre para continuar organizando sua vida."}
-              {authMode === "recover" && "Informe seu e-mail e defina uma nova senha."}
+              {authMode === "recover" && (resetToken ? "Confirme seu e-mail e defina uma nova senha." : "Informe seu e-mail para receber o link de redefinição.")}
             </p>
 
             <div className="mt-4 flex gap-2">
@@ -321,7 +364,7 @@ export default function Home() {
               {authMode !== "recover" && (
                 <input className="w-full border rounded-xl px-4 py-3" placeholder="********" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               )}
-              {authMode === "recover" && (
+              {authMode === "recover" && resetToken && (
                 <input className="w-full border rounded-xl px-4 py-3" placeholder="Nova senha" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
               )}
 
@@ -329,7 +372,7 @@ export default function Home() {
               {success && <p className="text-sm text-green-700">{success}</p>}
 
               <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl py-3 font-bold">
-                {authMode === "signup" ? "Criar conta" : authMode === "recover" ? "Atualizar senha" : "Entrar"}
+                {authMode === "signup" ? "Criar conta" : authMode === "recover" ? (resetToken ? "Atualizar senha" : "Enviar link de recuperação") : "Entrar"}
               </button>
             </form>
           </div>
