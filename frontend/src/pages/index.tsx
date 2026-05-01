@@ -37,6 +37,7 @@ export default function Home() {
     return raw ? JSON.parse(raw) : initialTodos;
   });
   const [selectedDate, setSelectedDate] = useState(today);
+  const [calendarMonth, setCalendarMonth] = useState(today.slice(0, 7));
   const [newTodo, setNewTodo] = useState({ title: "", details: "", time: "", date: today, type: "atividade" as Todo["type"] });
 
   useEffect(() => {
@@ -54,6 +55,14 @@ export default function Home() {
   const weeklyCompleted = [8, 6, 10, 7, 9, 5, 4];
   const weeklyStudyHours = [4, 3.5, 5, 4.5, 5.5, 3, 2];
   const weekDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  const visibleDays = useMemo(() => {
+    const [year, month] = calendarMonth.split("-").map(Number);
+    const totalDays = new Date(year, month, 0).getDate();
+    return Array.from({ length: totalDays }, (_, index) => {
+      const day = String(index + 1).padStart(2, "0");
+      return `${calendarMonth}-${day}`;
+    });
+  }, [calendarMonth]);
 
   function resetAuthMessages() {
     setError("");
@@ -130,6 +139,18 @@ export default function Home() {
     setNewTodo({ title: "", details: "", time: "", date: selectedDate, type: "atividade" });
   }
 
+  function changeMonth(offset: number) {
+    const [year, month] = calendarMonth.split("-").map(Number);
+    const base = new Date(year, month - 1 + offset, 1);
+    const nextMonth = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}`;
+    setCalendarMonth(nextMonth);
+  }
+
+  function selectDate(date: string) {
+    setSelectedDate(date);
+    setCalendarMonth(date.slice(0, 7));
+  }
+
   function sendDailyEmail() {
     const lines = selectedTodos.map((todo) => `• ${todo.time} - ${todo.title} (${todo.type}) [${todo.done ? "concluída" : "pendente"}]`).join("%0D%0A");
     const body = `Agenda do dia ${selectedDate}%0D%0A%0D%0A${lines || "Sem atividades para hoje."}`;
@@ -157,13 +178,15 @@ export default function Home() {
           <section className="bg-white rounded-2xl border p-6">
             <h2 className="text-2xl font-bold">Agenda e calendário</h2>
             <p className="mt-2 text-slate-500">Dia selecionado: {selectedDate}</p>
+            <div className="mt-4 flex items-center gap-3">
+              <button onClick={() => changeMonth(-1)} className="rounded-lg border px-3 py-2 bg-slate-50 hover:bg-slate-100">← Mês anterior</button>
+              <p className="font-semibold">{calendarMonth}</p>
+              <button onClick={() => changeMonth(1)} className="rounded-lg border px-3 py-2 bg-slate-50 hover:bg-slate-100">Próximo mês →</button>
+            </div>
             <div className="mt-5 grid grid-cols-7 gap-2 text-center text-sm">
-              {[...Array(31)].map((_, index) => {
-                const day = String(index + 1).padStart(2, "0");
-                const yyyyMm = selectedDate.slice(0, 8);
-                const date = `${yyyyMm}${day}`;
+              {visibleDays.map((date) => {
                 const active = date === selectedDate;
-                return <button key={index} onClick={() => setSelectedDate(date)} className={`h-12 rounded-lg border transition ${active ? "bg-blue-600 text-white" : "bg-slate-50 hover:bg-slate-100"}`}>{index + 1}</button>;
+                return <button key={date} onClick={() => selectDate(date)} className={`h-12 rounded-lg border transition ${active ? "bg-blue-600 text-white" : "bg-slate-50 hover:bg-slate-100"}`}>{Number(date.slice(-2))}</button>;
               })}
             </div>
 
@@ -172,7 +195,7 @@ export default function Home() {
               <div className="mt-4 grid md:grid-cols-2 gap-3">
                 <input value={newTodo.title} onChange={(e) => setNewTodo((c) => ({ ...c, title: e.target.value }))} placeholder="Atividade" className="border rounded-lg px-3 py-2" />
                 <input value={newTodo.time} onChange={(e) => setNewTodo((c) => ({ ...c, time: e.target.value }))} type="time" className="border rounded-lg px-3 py-2" />
-                <input value={newTodo.date} onChange={(e) => setNewTodo((c) => ({ ...c, date: e.target.value }))} type="date" className="border rounded-lg px-3 py-2" />
+                <input value={newTodo.date} onChange={(e) => { setNewTodo((c) => ({ ...c, date: e.target.value })); setCalendarMonth(e.target.value.slice(0, 7)); }} type="date" className="border rounded-lg px-3 py-2" />
                 <select value={newTodo.type} onChange={(e) => setNewTodo((c) => ({ ...c, type: e.target.value as Todo["type"] }))} className="border rounded-lg px-3 py-2"><option value="atividade">Atividade</option><option value="aula">Aula</option></select>
                 <input value={newTodo.details} onChange={(e) => setNewTodo((c) => ({ ...c, details: e.target.value }))} placeholder="Detalhes" className="border rounded-lg px-3 py-2 md:col-span-2" />
               </div>

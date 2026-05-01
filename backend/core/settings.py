@@ -128,3 +128,5 @@ INSTALLED_APPS = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 STATIC_URL = '/static/'
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@agendamente.local"
