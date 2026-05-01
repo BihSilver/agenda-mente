@@ -1,8 +1,8 @@
 export default function Hero() {
   return (
-    <section className="flex items-center justify-between px-12 py-20 bg-white">
-      {/* Texto à esquerda */}
-      <div className="max-w-lg">
+    <section className="flex items-center justify-center gap-8 px-8 py-16 bg-white">
+      {/* Texto */}
+      <div className="max-w-md">
         <h1 className="text-4xl font-bold mb-6">
           Organize sua vida acadêmica e pessoal em um só lugar
         </h1>
@@ -20,13 +20,12 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Ilustração à direita */}
-      <div className="relative">
-        <div className="w-64 h-64 rounded-full bg-gradient-to-tr from-green-400 to-yellow-300 flex items-center justify-center">
-          {/* Aqui entra o sapinho */}
-          <img src="/frog.png" alt="Mascote AgendaMente" className="w-40 h-40" />
+      {/* Mascote */}
+      <div className="relative flex-shrink-0">
+      <div className="w-56 h-56 rounded-full bg-gradient-to-tr from-green-200 to-blue-300 flex items-center justify-center shadow-lg">
+       <div className="text-8xl animate-bounce">🐸</div>
         </div>
-        <span className="absolute top-0 right-0 bg-yellow-400 text-black px-4 py-2 rounded-full font-bold shadow-md">
+        <span className="absolute top-2 right-2 bg-yellow-200 text-black px-4 py-2 rounded-full font-bold shadow-md">
           Vamos lá!
         </span>
       </div>

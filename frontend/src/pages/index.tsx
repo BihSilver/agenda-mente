@@ -1,5 +1,5 @@
 import { Header } from "../components/Header";
-import { HeroSection } from "../components/HeroSection";
+import HeroSection from "../components/HeroSection";
 import { FeaturesSection } from "../components/FeaturesSection";
 import { MascotSection } from "../components/MascotSection";
 import { Footer } from "../components/Footer";
