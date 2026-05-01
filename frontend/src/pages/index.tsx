@@ -46,6 +46,10 @@ export default function Home() {
   const completed = useMemo(() => selectedTodos.filter((todo) => todo.done).length, [selectedTodos]);
   const progress = selectedTodos.length ? Math.round((completed / selectedTodos.length) * 100) : 0;
 
+  const weeklyCompleted = [8, 6, 10, 7, 9, 5, 4];
+  const weeklyStudyHours = [4, 3.5, 5, 4.5, 5.5, 3, 2];
+  const weekDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
   function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const users = JSON.parse(localStorage.getItem(STORAGE_USERS) || "[]") as UserAccount[];
@@ -103,6 +107,7 @@ export default function Home() {
           <button onClick={() => setIsLogged(false)} className="text-blue-600 font-semibold">Sair</button>
         </header>
         <main className="max-w-7xl mx-auto p-6 grid lg:grid-cols-[1.8fr_1fr] gap-6">
+          <div className="space-y-6">
           <section className="bg-white rounded-2xl border p-6">
             <h2 className="text-2xl font-bold">Agenda e calendário</h2>
             <p className="mt-2 text-slate-500">Dia selecionado: {selectedDate}</p>
@@ -143,6 +148,56 @@ export default function Home() {
               </ul>
             </div>
           </section>
+
+          <section className="bg-white rounded-2xl border p-6">
+            <h3 className="text-3xl font-bold">Dashboard de Desempenho</h3>
+            <div className="mt-5 grid md:grid-cols-3 gap-4">
+              <div className="rounded-xl bg-slate-100 p-4">
+                <p className="text-slate-600">Atividades Concluídas</p>
+                <p className="mt-2 text-5xl font-bold text-blue-600">49</p>
+                <p className="text-slate-500">Esta semana</p>
+              </div>
+              <div className="rounded-xl bg-green-50 p-4">
+                <p className="text-slate-600">Horas Estudadas</p>
+                <p className="mt-2 text-5xl font-bold text-green-500">27.5h</p>
+                <p className="text-slate-500">Esta semana</p>
+              </div>
+              <div className="rounded-xl bg-amber-50 p-4">
+                <p className="text-slate-600">Taxa de Conclusão</p>
+                <p className="mt-2 text-5xl font-bold">87%</p>
+                <p className="text-slate-500">+12% vs semana passada</p>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h4 className="text-2xl font-semibold">Atividades Concluídas por Dia</h4>
+              <div className="mt-4 rounded-xl border p-4">
+                <div className="grid grid-cols-7 gap-3 items-end h-56">
+                  {weeklyCompleted.map((value, index) => (
+                    <div key={weekDays[index]} className="flex flex-col items-center justify-end gap-2 h-full">
+                      <div className="w-full max-w-16 bg-blue-500 rounded-t-lg" style={{ height: `${(value / 12) * 100}%` }} />
+                      <span className="text-sm text-slate-600">{weekDays[index]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h4 className="text-2xl font-semibold">Horas de Estudo</h4>
+              <div className="mt-4 rounded-xl border p-4">
+                <div className="grid grid-cols-7 gap-3 items-end h-40">
+                  {weeklyStudyHours.map((value, index) => (
+                    <div key={`study-${weekDays[index]}`} className="flex flex-col items-center justify-end gap-2 h-full">
+                      <div className="w-4 rounded-full bg-green-400" style={{ height: `${(value / 8) * 100}%` }} />
+                      <span className="text-sm text-slate-600">{weekDays[index]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+          </div>
 
           <aside className="space-y-6">
             <section className="bg-gradient-to-br from-green-50 to-blue-50 border rounded-2xl p-6">
